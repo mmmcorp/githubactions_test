@@ -43,7 +43,7 @@ jobs:
         run: terraform plan
 
       - name: Exec Terraform apply
-        uses: dflook/terraform-apply@1
+        uses: dflook/terraform-apply@v1
         with:
           path: ./
           auto_approve: true
