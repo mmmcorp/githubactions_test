@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 env:
+  TF_VERSION: 1.1.2
   AWS_ROLE_ARN: arn:aws:iam::215502568245:role/role_for_github_actions
+  AWS_DEFAULT_REGION: ap-northeast-1
 
 permissions:
   id-token: write
@@ -15,10 +17,34 @@ permissions:
 jobs:
   aws-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/configure-aws-credentials@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ap-northeast-1
-      - run: aws sts get-caller-identity
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Exec Terraform fmt check
+        run: terraform fmt -recursive -check
+
+      - name: Exec Terraform init
+        run: terraform init
+
+      - name: Exec Terraform plan
+        run: terraform plan
+
+      - name: Exec Terraform apply
+        uses: dflook/terraform-apply@1
+        with:
+          path: ./
+          auto_approve: true
+
